@@ -1,0 +1,57 @@
+data "azurerm_subscription" "current" {}
+
+data "http" "my_ip" {
+  url = "https://ifconfig.me"
+}
+
+# Random string for resource group 
+resource "random_string" "random" {
+  length  = 12
+  upper   = false
+  number  = false
+  special = false
+}
+
+resource "azurerm_resource_group" "example" {
+  name     = random_string.random.result
+  location = "eastus"
+  tags     = var.tags
+}
+
+resource "azurerm_kubernetes_cluster" "example" {
+  name                = random_string.random.result
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
+
+  dns_prefix = random_string.random.result
+
+  sku_tier = "Paid"
+
+  default_node_pool {
+    name       = "default"
+    node_count = 1
+    vm_size    = "Standard_D4_v4"
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = var.tags
+}
+
+resource "azurerm_kubernetes_cluster_node_pool" "scaled" {
+  name                  = "scaled"
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.example.id
+  vm_size               = "Standard_B2s"
+  enable_auto_scaling   = true
+  min_count             = 1
+  max_count             = var.max_nodes
+
+  tags = var.tags
+}
+
+
+output "aks_login" {
+  value = "az aks get-credentials --name ${azurerm_kubernetes_cluster.example.name} --resource-group ${azurerm_resource_group.example.name}"
+}
