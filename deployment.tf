@@ -1,4 +1,10 @@
 resource "kubernetes_deployment" "sleepybox" {
+
+  timeouts {
+    create = var.create_timeout
+    delete = "5m"
+  }
+
   metadata {
     name = "sleepybox"
     labels = {
@@ -27,7 +33,7 @@ resource "kubernetes_deployment" "sleepybox" {
           "kubernetes.azure.com/agentpool" = "scaled"
         }
         container {
-          image   = var.deployment_container
+          image   = local.busybox_container
           name    = "sleepybox"
           command = ["/bin/sh", "-c", "--"]
           args    = ["echo `date` --- sleepytime; while true; do echo `date` --- sleeping 1 hour && sleep 3600; done"]

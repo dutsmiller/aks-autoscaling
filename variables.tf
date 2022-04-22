@@ -1,8 +1,7 @@
-variable "busybox_container" {
-  description = "Busybox container URI."
+variable "create_timeout" {
+  description = "Time allowed to create deployment (autoscaling timeout)."
   type        = string
-  default     = "mcr.microsoft.com/oss/busybox/busybox:1.33.1"
-
+  default     = "10m"
 }
 
 variable "deployment_size" {

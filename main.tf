@@ -1,7 +1,12 @@
 data "azurerm_subscription" "current" {}
 
-data "http" "my_ip" {
-  url = "https://ifconfig.me"
+data "http" "busybox_tags" {
+  url = "https://mcr.microsoft.com/v2/oss/busybox/busybox/tags/list"
+}
+
+locals {
+  busybox_tag       = jsondecode(data.http.busybox_tags.body).tags.0
+  busybox_container = "mcr.microsoft.com/oss/busybox/busybox:${local.busybox_tag}"
 }
 
 # Random string for resource group 
@@ -53,5 +58,5 @@ resource "azurerm_kubernetes_cluster_node_pool" "scaled" {
 
 
 output "aks_login" {
-  value = "az aks get-credentials --name ${azurerm_kubernetes_cluster.example.name} --resource-group ${azurerm_resource_group.example.name}"
+  value = "az aks get-credentials --name ${azurerm_kubernetes_cluster.example.name} --resource-group ${azurerm_resource_group.example.name} --subscription ${data.azurerm_subscription.current.display_name}"
 }
