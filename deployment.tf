@@ -32,22 +32,25 @@ resource "kubernetes_deployment" "sleepybox" {
         node_selector = {
           "kubernetes.azure.com/agentpool" = "scaled"
         }
+        affinity {
+          pod_anti_affinity {
+            required_during_scheduling_ignored_during_execution {
+              label_selector {
+                match_expressions {
+                  key      = "app"
+                  operator = "In"
+                  values   = ["sleepybox"]
+                }
+              }
+              topology_key = "kubernetes.io/hostname"
+            }
+          }
+        }
         container {
           image   = local.busybox_container
           name    = "sleepybox"
           command = ["/bin/sh", "-c", "--"]
           args    = ["echo `date` --- sleepytime; while true; do echo `date` --- sleeping 1 hour && sleep 3600; done"]
-
-          resources {
-            limits = {
-              cpu    = "1500m"
-              memory = "512Mi"
-            }
-            requests = {
-              cpu    = "1500m"
-              memory = "512Mi"
-            }
-          }
         }
       }
     }
